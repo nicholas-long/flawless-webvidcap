@@ -1,0 +1,30 @@
+#!/bin/bash
+
+
+# TODO: check URLs are valid
+echo "{"
+if [ ! -z "$1" ]; then
+  echo "$1" # print input object
+else
+  cat
+fi | jq -r '.[]' | sort -u | awk '
+!/^$/ {
+  if (NR > 1) print ","
+  print "  \"" $1 "\": ["
+  cmd = "./get-gif-frames " $1
+  n = 0
+  while ((cmd | getline) > 0) {
+    if (length() > 0) {
+      if (n) print ","
+      printf "    \"" $1 "\""
+      n++
+    }
+  }
+  close(cmd)
+  print ""
+  print "]"
+}
+'
+echo "}"
+#| awk '{print "./get-gif-frames " $1}' | parallel
+

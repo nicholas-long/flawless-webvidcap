@@ -1,0 +1,24 @@
+#!/bin/bash
+
+if [[ $(uname) =~ Linux ]]; then
+  b64command="base64 -w0"
+else
+  b64command="base64"
+fi
+tf="$(mktemp -u).gif" # generate temptile with extension
+td=$(mktemp -d)
+cd "$td"
+curl "$1" > $tf # download file
+ffmpeg -i "$tf" -filter:v fps=30 gifframe.%1d.png
+if [[ "$1" =~ png$ ]]; then
+  ls gifframe* > diag.out
+fi
+
+for f in $(ls gifframe.*.png | awk -F '.' '{print $2, $0}' | sort -n | awk '{print $2}'); do
+  printf "data:image/png;base64," && cat $f | $b64command
+  echo
+done
+rm gifframe.*.png
+rm "$tf"
+rm -rf "$td"
+cd - >/dev/null

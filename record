@@ -1,0 +1,19 @@
+#!/bin/bash
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+framerate="$4"
+format="$6"
+
+# record PNGs
+node $SCRIPT_DIR/record.js "$@" 0
+if [ "$format" = "mp4" ]; then
+  if [ -f output.mp4 ]; then
+    rm output.mp4
+  fi
+  ffmpeg -framerate $framerate -i 'frame.%1d.png' -c:v libx264 -c:a aac -pix_fmt yuv420p output.mp4
+elif [ "$format" = "webm" ]; then
+  if [ -f output.webm ]; then
+    rm output.webm
+  fi
+  ffmpeg -framerate $framerate -i 'frame.%1d.png' -c:v libvpx-vp9 -pix_fmt yuva420p output.webm
+fi
+rm *.png

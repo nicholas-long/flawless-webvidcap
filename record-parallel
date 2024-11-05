@@ -1,0 +1,47 @@
+#!/bin/bash
+
+rm *.png 2>/dev/null
+
+export url="$1"
+export width="$2"
+export height="$3"
+export frames=60
+export format="$6"
+export chunks=$7
+export duration=$(python3 -c "print($chunks / $frames)")
+
+echo "using duration $duration format $format chunks $chunks frames $frames" >/dev/stderr
+
+# run multiple jobs at once in parallel
+awk '
+BEGIN {
+  chunks = ENVIRON["chunks"]
+  chunksize=60
+  dur=1
+  for (n = 0; n < chunks; n = n + chunksize) {
+    if (chunks - n <= (chunksize * 4)) { # split the last part of the video into more chunks
+      chunksize=30
+      dur=0.5
+    }
+    print "node record.js " ENVIRON["url"] " " ENVIRON["width"] " " ENVIRON["height"] " " ENVIRON["frames"] " " dur " " ENVIRON["format"] " " n
+  }
+}
+' | parallel -j 2 # number of jobs to run at once
+
+if [ "$format" = "mp4" ]; then
+  if [ -f output.mp4 ]; then
+    rm output.mp4
+  fi
+  ffmpeg -framerate $frames -i 'frame.%1d.png' -c:v libx264 -c:a aac -pix_fmt yuv420p output.mp4
+elif [ "$format" = "webm" ]; then
+  if [ -f output.webm ]; then
+    rm output.webm
+  fi
+  ffmpeg -framerate $frames -i 'frame.%1d.png' -c:v libvpx-vp9 -pix_fmt yuva420p output.webm
+elif [ "$format" = "mov" ]; then # mov format for raw transparent source content
+  if [ -f output.mov ]; then
+    rm output.mov
+  fi
+  ffmpeg -framerate $frames -i 'frame.%1d.png' -c:v png -pix_fmt rgba output.mov
+fi
+rm *.png
