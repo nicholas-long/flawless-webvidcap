@@ -29,7 +29,7 @@ npm install puppeteer # install requirement into node_modules directory
 - mov
   - raw RGBA PNG frames in MOV container -> high memory usage, source quality video
 
-## details
+## Details
 
 - this solution optimizes really well. by breaking it into pieces, the parts could even be completed on multiple servers!
   - works by updating the offsets of all videos / animations while running
@@ -44,7 +44,7 @@ npm install puppeteer # install requirement into node_modules directory
 - able to break into chunks and record in parallel for speed
   - the last few chunks are smaller than the rest in order to optimize workflow and CPU usage - practical fine tuning
 
-## execution steps
+## Execution Steps
 - export a PNG for each frame. use parallel processes to generate different "chunks" starting at offsets
 - stitch them together using `ffmpeg`
 
